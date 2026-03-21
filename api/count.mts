@@ -1,5 +1,5 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import db, { ensureSchema } from './_db';
+import db, { ensureSchema } from './_db.mjs';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   await ensureSchema();

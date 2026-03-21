@@ -51,7 +51,16 @@
       "Bash(gh auth status)",
       "Bash(~/.turso/turso db shell seo-is-dead \"SELECT COUNT\\(*\\) as count FROM seen_items\")",
       "Bash(curl -s 'https://seo-is-dead-eyrx.vercel.app/api/count')",
-      "Bash(python3 -c \"import sys,json; d=json.load\\(sys.stdin\\); print\\(d.get\\(''type'', ''NOT SET''\\)\\)\")"
+      "Bash(python3 -c \"import sys,json; d=json.load\\(sys.stdin\\); print\\(d.get\\(''type'', ''NOT SET''\\)\\)\")",
+      "Bash(curl -sv 'https://seo-is-dead-eyrx.vercel.app/api/count')",
+      "Bash(mv _db.ts _db.mts)",
+      "Bash(mv count.ts count.mts)",
+      "Bash(mv recent.ts recent.mts)",
+      "Bash(mv chart.ts chart.mts)",
+      "Bash(mv cron/poll.ts cron/poll.mts)",
+      "Bash(ls -la *.mts cron/*.mts)",
+      "Bash(sed -i '' \"s|from ''./_db''|from ''./_db.mjs''|g\" api/recent.mts api/chart.mts)",
+      "Bash(sed -i '' \"s|from ''../_db''|from ''../_db.mjs''|g\" api/cron/poll.mts)"
     ]
   }
 }

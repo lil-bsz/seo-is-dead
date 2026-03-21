@@ -1,5 +1,5 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import db, { ensureSchema } from '../_db';
+import db, { ensureSchema } from '../_db.mjs';
 
 export const config = { maxDuration: 60 };
 
