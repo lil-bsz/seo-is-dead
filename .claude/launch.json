@@ -1,0 +1,17 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "backend",
+      "runtimeExecutable": "bash",
+      "runtimeArgs": ["-c", "export NVM_DIR=\"$HOME/.nvm\" && . \"$NVM_DIR/nvm.sh\" && node server.js"],
+      "port": 3000
+    },
+    {
+      "name": "dev",
+      "runtimeExecutable": "bash",
+      "runtimeArgs": ["-c", "export NVM_DIR=\"$HOME/.nvm\" && . \"$NVM_DIR/nvm.sh\" && npx vite"],
+      "port": 5180
+    }
+  ]
+}

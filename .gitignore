@@ -1,0 +1,7 @@
+node_modules
+dist
+.env
+counter.db
+counter.db-wal
+counter.db-shm
+.vercel
