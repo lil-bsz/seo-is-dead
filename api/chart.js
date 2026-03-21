@@ -1,14 +1,13 @@
-import type { VercelRequest, VercelResponse } from '@vercel/node';
-import db, { ensureSchema } from './_db.mjs';
+const { db, ensureSchema } = require('./_db');
 
-export default async function handler(req: VercelRequest, res: VercelResponse) {
+module.exports = async function handler(req, res) {
   await ensureSchema();
-  const range = (req.query.range as string) || '30d';
+  const range = req.query.range || '30d';
   const now = Math.floor(Date.now() / 1000);
 
   let whereClause = '';
   let groupExpr = '';
-  let args: number[] = [];
+  let args = [];
 
   switch (range) {
     case 'today': {
@@ -43,4 +42,4 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   });
 
   res.json({ data: result.rows });
-}
+};

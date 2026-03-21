@@ -1,10 +1,9 @@
-import type { VercelRequest, VercelResponse } from '@vercel/node';
-import db, { ensureSchema } from './_db.mjs';
+const { db, ensureSchema } = require('./_db');
 
-export default async function handler(req: VercelRequest, res: VercelResponse) {
+module.exports = async function handler(req, res) {
   await ensureSchema();
-  const limit = Math.min(parseInt(req.query.limit as string) || 12, 100);
-  const offset = parseInt(req.query.offset as string) || 0;
+  const limit = Math.min(parseInt(req.query.limit) || 12, 100);
+  const offset = parseInt(req.query.offset) || 0;
 
   const recent = await db.execute({
     sql: `SELECT reddit_id, subreddit, permalink, body, created_utc, author,
@@ -14,7 +13,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   });
 
   const countResult = await db.execute('SELECT COUNT(*) as count FROM seen_items');
-  const count = countResult.rows[0].count as number;
+  const count = countResult.rows[0].count;
 
   res.json({ items: recent.rows, total: count, hasMore: offset + limit < count });
-}
+};

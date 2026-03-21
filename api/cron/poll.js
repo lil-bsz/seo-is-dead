@@ -1,19 +1,15 @@
-import type { VercelRequest, VercelResponse } from '@vercel/node';
-import db, { ensureSchema } from '../_db.mjs';
-
-export const config = { maxDuration: 60 };
+const { db, ensureSchema } = require('../_db');
 
 const USER_AGENT = 'seo-is-dead-counter/1.0 (educational project)';
 const SEARCH_QUERY = encodeURIComponent('"SEO is dead"');
 
-async function fetchReddit(url: string) {
+async function fetchReddit(url) {
   const res = await fetch(url, { headers: { 'User-Agent': USER_AGENT } });
   if (res.status === 429 || !res.ok) return null;
   return res.json();
 }
 
-export default async function handler(req: VercelRequest, res: VercelResponse) {
-  // Verify cron secret for security
+module.exports = async function handler(req, res) {
   const authHeader = req.headers['authorization'];
   if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
     return res.status(401).json({ error: 'Unauthorized' });
@@ -22,7 +18,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   await ensureSchema();
   let newCount = 0;
 
-  // Search posts
   const postsData = await fetchReddit(
     `https://www.reddit.com/search.json?q=${SEARCH_QUERY}&sort=new&limit=100`
   );
@@ -45,7 +40,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   await new Promise(r => setTimeout(r, 2000));
 
-  // Search comments
   const commentsData = await fetchReddit(
     `https://www.reddit.com/search.json?q=${SEARCH_QUERY}&sort=new&limit=100&type=comment`
   );
@@ -67,4 +61,4 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   const total = await db.execute('SELECT COUNT(*) as count FROM seen_items');
   res.json({ newCount, total: total.rows[0].count });
-}
+};

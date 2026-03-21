@@ -1,4 +1,4 @@
-import { createClient } from '@libsql/client';
+const { createClient } = require('@libsql/client');
 
 const url = process.env.TURSO_DATABASE_URL || '';
 const db = createClient({
@@ -8,7 +8,7 @@ const db = createClient({
 
 let schemaReady = false;
 
-export async function ensureSchema() {
+async function ensureSchema() {
   if (schemaReady) return;
   await db.execute(`
     CREATE TABLE IF NOT EXISTS seen_items (
@@ -24,4 +24,4 @@ export async function ensureSchema() {
   schemaReady = true;
 }
 
-export default db;
+module.exports = { db, ensureSchema };

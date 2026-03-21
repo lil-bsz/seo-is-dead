@@ -60,7 +60,13 @@
       "Bash(mv cron/poll.ts cron/poll.mts)",
       "Bash(ls -la *.mts cron/*.mts)",
       "Bash(sed -i '' \"s|from ''./_db''|from ''./_db.mjs''|g\" api/recent.mts api/chart.mts)",
-      "Bash(sed -i '' \"s|from ''../_db''|from ''../_db.mjs''|g\" api/cron/poll.mts)"
+      "Bash(sed -i '' \"s|from ''../_db''|from ''../_db.mjs''|g\" api/cron/poll.mts)",
+      "Bash(curl -s -D - 'https://seo-is-dead-eyrx.vercel.app/api/count')",
+      "Bash(mv _db.mts _db.js)",
+      "Bash(mv count.mts count.js)",
+      "Bash(mv recent.mts recent.js)",
+      "Bash(mv chart.mts chart.js)",
+      "Bash(mv cron/poll.mts cron/poll.js)"
     ]
   }
 }
