@@ -2,10 +2,11 @@
   "name": "seo-is-dead-counter",
   "version": "1.0.0",
   "description": "Counts how many times people on Reddit say SEO is dead",
-  "main": "server.js",
+  "type": "module",
+  "main": "server.cjs",
   "scripts": {
-    "start": "node server.js",
-    "dev": "concurrently \"node server.js\" \"vite\"",
+    "start": "node server.cjs",
+    "dev": "concurrently \"node server.cjs\" \"vite\"",
     "build": "vite build"
   },
   "dependencies": {

@@ -47,7 +47,11 @@
       "Bash($HOME/.nvm/versions/node/v24.14.0/bin/npm install --prefix \"/Users/bartek.szafranowzowie.ai/Desktop/GetM/Marketing/SEO is dead\" @libsql/client @vercel/node)",
       "Bash(npm install --prefix \"/Users/bartek.szafranowzowie.ai/Desktop/GetM/Marketing/SEO is dead\" @libsql/client @vercel/node)",
       "Bash(npm install --prefix \"/Users/bartek.szafranowzowie.ai/Desktop/GetM/Marketing/SEO is dead\" dotenv)",
-      "Bash(node scripts/seed-turso.mjs)"
+      "Bash(node scripts/seed-turso.mjs)",
+      "Bash(gh auth status)",
+      "Bash(~/.turso/turso db shell seo-is-dead \"SELECT COUNT\\(*\\) as count FROM seen_items\")",
+      "Bash(curl -s 'https://seo-is-dead-eyrx.vercel.app/api/count')",
+      "Bash(python3 -c \"import sys,json; d=json.load\\(sys.stdin\\); print\\(d.get\\(''type'', ''NOT SET''\\)\\)\")"
     ]
   }
 }
