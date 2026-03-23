@@ -245,6 +245,16 @@ app.get('/api/backfill', (req, res) => {
   res.json({ progress: backfillProgress });
 });
 
+app.get('/api/top-subreddits', (req, res) => {
+  const data = db.prepare('SELECT subreddit, COUNT(*) as count FROM seen_items GROUP BY subreddit ORDER BY count DESC LIMIT 5').all();
+  res.json({ items: data });
+});
+
+app.get('/api/top-redditors', (req, res) => {
+  const data = db.prepare('SELECT author, COUNT(*) as count FROM seen_items WHERE author IS NOT NULL GROUP BY author ORDER BY count DESC LIMIT 5').all();
+  res.json({ items: data });
+});
+
 app.get('/api/chart', (req, res) => {
   const range = req.query.range || '30d';
   const now = Math.floor(Date.now() / 1000);
