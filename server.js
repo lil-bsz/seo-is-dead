@@ -48,7 +48,20 @@ const recentStmt = db.prepare(`
 
 // --- Reddit polling ---
 const USER_AGENT = 'seo-is-dead-counter/1.0 (educational project)';
-const SEARCH_QUERY = encodeURIComponent('"SEO is dead"');
+
+// Broader search queries to catch more mentions
+const SEARCH_QUERIES = [
+  '"SEO is dead"',
+  '"SEO is dying"',
+  '"death of SEO"',
+  '"RIP SEO"',
+  '"SEO is over"',
+  '"SEO is obsolete"',
+  '"end of SEO"',
+];
+
+// Fuzzy regex that matches all variations locally
+const SEO_DEAD_REGEX = /seo.{0,15}(?:is|is basically|has|has been|will be).{0,10}(?:dead|dying|over|obsolete|finished|done|doomed)|death.{0,8}of.{0,8}seo|rip.{0,8}seo|end.{0,8}of.{0,8}seo/i;
 
 async function fetchReddit(url) {
   const res = await fetch(url, {
@@ -72,38 +85,47 @@ async function pollReddit() {
   console.log(`[${new Date().toISOString()}] Polling Reddit...`);
   let newCount = 0;
 
-  // Search posts
-  const postsUrl = `https://www.reddit.com/search.json?q=${SEARCH_QUERY}&sort=new&limit=100`;
-  const postsData = await fetchReddit(postsUrl);
+  for (const query of SEARCH_QUERIES) {
+    const encoded = encodeURIComponent(query);
 
-  if (postsData?.data?.children) {
-    const prevCount = countStmt.get().count;
-    for (const child of postsData.data.children) {
-      const post = child.data;
-      const text = `${post.title || ''} ${post.selftext || ''}`;
-      if (/seo is dead/i.test(text)) {
-        insertStmt.run(post.name, text.slice(0, 500), post.subreddit, post.permalink, post.created_utc, post.author || null);
+    // Search posts
+    const postsData = await fetchReddit(
+      `https://www.reddit.com/search.json?q=${encoded}&sort=new&limit=100`
+    );
+
+    if (postsData?.data?.children) {
+      const prevCount = countStmt.get().count;
+      for (const child of postsData.data.children) {
+        const post = child.data;
+        const text = `${post.title || ''} ${post.selftext || ''}`;
+        if (SEO_DEAD_REGEX.test(text)) {
+          insertStmt.run(post.name, text.slice(0, 500), post.subreddit, post.permalink, post.created_utc, post.author || null);
+        }
       }
+      newCount += countStmt.get().count - prevCount;
     }
-    newCount += countStmt.get().count - prevCount;
-  }
 
-  // Wait a bit between requests to be polite
-  await new Promise(r => setTimeout(r, 2000));
+    // Be polite between requests
+    await new Promise(r => setTimeout(r, 2000));
 
-  // Search comments
-  const commentsUrl = `https://www.reddit.com/search.json?q=${SEARCH_QUERY}&sort=new&limit=100&type=comment`;
-  const commentsData = await fetchReddit(commentsUrl);
+    // Search comments
+    const commentsData = await fetchReddit(
+      `https://www.reddit.com/search.json?q=${encoded}&sort=new&limit=100&type=comment`
+    );
 
-  if (commentsData?.data?.children) {
-    const prevCount = countStmt.get().count;
-    for (const child of commentsData.data.children) {
-      const comment = child.data;
-      if (/seo is dead/i.test(comment.body || '')) {
-        insertStmt.run(comment.name, (comment.body || '').slice(0, 500), comment.subreddit, comment.permalink, comment.created_utc, comment.author || null);
+    if (commentsData?.data?.children) {
+      const prevCount = countStmt.get().count;
+      for (const child of commentsData.data.children) {
+        const comment = child.data;
+        if (SEO_DEAD_REGEX.test(comment.body || '')) {
+          insertStmt.run(comment.name, (comment.body || '').slice(0, 500), comment.subreddit, comment.permalink, comment.created_utc, comment.author || null);
+        }
       }
+      newCount += countStmt.get().count - prevCount;
     }
-    newCount += countStmt.get().count - prevCount;
+
+    // Wait between different queries
+    await new Promise(r => setTimeout(r, 2000));
   }
 
   const total = countStmt.get().count;
@@ -139,32 +161,37 @@ async function fetchArctic(url) {
   return res.json();
 }
 
+// Arctic Shift search phrases (broader set for backfill)
+const BACKFILL_PHRASES = ['"SEO is dead"', '"SEO is dying"', '"death of SEO"', '"RIP SEO"', '"SEO is over"', '"end of SEO"'];
+
 async function backfillSubreddit(subreddit, type) {
   const endpoint = type === 'posts' ? 'posts' : 'comments';
   const queryParam = type === 'posts' ? 'query' : 'body';
-  const searchPhrase = encodeURIComponent('"SEO is dead"');
   let totalInserted = 0;
-  let before = null;
 
-  while (true) {
-    let url = `${ARCTIC_BASE}/${endpoint}/search?${queryParam}=${searchPhrase}&subreddit=${encodeURIComponent(subreddit)}&limit=100&sort=desc`;
-    if (before) url += `&before=${before}`;
+  for (const phrase of BACKFILL_PHRASES) {
+    const searchPhrase = encodeURIComponent(phrase);
+    let before = null;
 
-    const data = await fetchArctic(url);
-    if (!data?.data?.length) break;
+    while (true) {
+      let url = `${ARCTIC_BASE}/${endpoint}/search?${queryParam}=${searchPhrase}&subreddit=${encodeURIComponent(subreddit)}&limit=100&sort=desc`;
+      if (before) url += `&before=${before}`;
 
-    const prevCount = countStmt.get().count;
-    for (const item of data.data) {
-      const isComment = type === 'comments';
-      const redditId = isComment ? `t1_${item.id}` : `t3_${item.id}`;
-      const body = isComment ? (item.body || '').slice(0, 500) : `${item.title || ''} ${item.selftext || ''}`.slice(0, 500);
-      const permalink = item.permalink || '';
-      const author = item.author || null;
+      const data = await fetchArctic(url);
+      if (!data?.data?.length) break;
 
-      if (/seo is dead/i.test(body)) {
-        insertStmt.run(redditId, body, item.subreddit || subreddit, permalink, item.created_utc, author);
+      const prevCount = countStmt.get().count;
+      for (const item of data.data) {
+        const isComment = type === 'comments';
+        const redditId = isComment ? `t1_${item.id}` : `t3_${item.id}`;
+        const body = isComment ? (item.body || '').slice(0, 500) : `${item.title || ''} ${item.selftext || ''}`.slice(0, 500);
+        const permalink = item.permalink || '';
+        const author = item.author || null;
+
+        if (SEO_DEAD_REGEX.test(body)) {
+          insertStmt.run(redditId, body, item.subreddit || subreddit, permalink, item.created_utc, author);
+        }
       }
-    }
     totalInserted += countStmt.get().count - prevCount;
 
     // Paginate: use last item's created_utc as the new "before"
@@ -174,6 +201,10 @@ async function backfillSubreddit(subreddit, type) {
 
     // Rate limit: wait 500ms between requests
     await new Promise(r => setTimeout(r, 500));
+    }
+
+    // Small delay between phrases
+    await new Promise(r => setTimeout(r, 300));
   }
 
   return totalInserted;
